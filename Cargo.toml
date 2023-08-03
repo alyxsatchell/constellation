@@ -3,16 +3,16 @@ name = "constellation"
 version = "0.1.0"
 edition = "2021"
 authors = ["KemoshCode <kemosh@live.com>"]
-description = "A Physics Based Game"
+description = "A ASCII Based Graphics Library"
 license = "MIT/Apache-2.0"
-repository = "https://github.com/KemoshCode/Built-Different"
+repository = "https://github.com/KemoshCode/constellation"
 
 [lib]
-name = "built_different_lib"
+name = "constellation"
 path = "src/lib.rs"
 
 [[bin]]
-name = "built_different"
+name = "constellation_bin"
 path = "src/main.rs"
 
 [dependencies]
