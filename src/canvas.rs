@@ -1,4 +1,6 @@
-use std::fmt::Display;
+use std::{fmt::Display, ops::Add};
+
+use crate::stencil::{StencilMap, Transformation};
 
 const BLACK_BG: Color = Color{
     background: true,
@@ -7,44 +9,79 @@ const BLACK_BG: Color = Color{
     g: 0
 };
 const BLACK_TILE: Tile = Tile{
+    id: 0,
     bg: Some(BLACK_BG),
     fg: None,
     character: ' '
 };
 
+#[derive(Debug, Copy, Clone)]
+pub struct Point{
+    pub x: usize,
+    pub y: usize
+}
+
+impl From<Point> for (usize, usize) {
+    fn from(point: Point) -> (usize, usize) {
+        let Point { x, y } = point;
+        (x, y)
+    }
+}
+
+impl Add for Point{
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Point{
+            x: self.x + rhs.x,
+            y: self.y + rhs.y
+        }
+    }
+}
+
 pub struct Canvas{
     tiles: TileMap,
-    size: (usize, usize),
+    size: Point,
 
 }
 
 impl Canvas{
-    pub fn new(size: (usize, usize)) -> Canvas{
-        Canvas { tiles: TileMap::new(size, BLACK_BG), size}
+    pub fn new(size: (usize, usize), default_color: Color) -> Canvas{
+        let size: Point = Point { x: size.0, y: size.1 };
+        Canvas { 
+            tiles: TileMap::new(size, default_color), 
+            size}
     }
 
     pub fn draw(&self){
         println!("{}", self.tiles.to_string());
-        println!("{:?}", self.tiles);
+    }
+
+    pub fn update(&mut self, stencilmap: StencilMap){
+        self.tiles.draw_stencilmap(stencilmap);
     }
 }
 
 #[derive(Debug)]
 pub struct TileMap{
+    default_tile: Tile,
     map: Vec<Vec<Tile>>
 }
 
 impl TileMap{
-    pub fn new(size: (usize, usize), default_color: Color) -> TileMap{
+    pub fn new(size: Point, default_color: Color) -> TileMap{
         let mut map = Vec::new();
-        for i in 0..size.1 {
+        for i in 0..size.y {
             let mut tmp: Vec<Tile> = Vec::new();
-            for j in 0..size.0{
-                tmp.push(Tile::new(default_color));
+            for j in 0..size.x{
+                tmp.push(Tile::new(default_color, 0));
             }
             map.push(tmp);
         }
-        TileMap { map }
+        TileMap { 
+            map,
+            default_tile: Tile::new(default_color, 0),
+        }
     }
 
     pub fn to_string(&self) -> String{
@@ -59,25 +96,57 @@ impl TileMap{
         string.pop();
         string
     }
+
+    pub fn draw_stencilmap(&mut self, stencilmap: StencilMap){
+        for trans in stencilmap{
+            match trans.previous_origin{
+                Some(_) => self.replace(trans),
+                None => self.insert(trans.translation(), trans.tile),
+            }
+        }
+    }
+
+    fn replace(&mut self, trans: Transformation){
+        let (x, y) = trans.origin.into();
+        let id = trans.tile.id;
+        self.insert(trans.translation(), trans.tile);
+        let default_tile = &self.default_tile;
+        if id == self.map[y][x].id{
+            self.insert(trans.previous_translation(), *default_tile);
+        }
+    }
+
+    fn insert(&mut self, coord: Point, tile: Tile){
+        let (x,y) = coord.into();
+        if y >= self.map.len(){
+            return
+        }
+        if x >= self.map[y].len(){
+            return
+        }
+        self.map[y][x] = tile;
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Tile{
+    id: i32,
     bg: Option<Color>,
     fg: Option<Color>,
     character: char,
 }
 
 impl Tile{
-    pub fn new(color: Color) -> Tile{
-        Tile { bg: Some(color), fg: None, character: ' ' }
+    pub fn new(color: Color, id: i32) -> Tile{
+        Tile { bg: Some(color), fg: None, character: ' ', id }
     }
 
-    pub fn new_fg(bg: Color, fg: Color, character: char) -> Tile{
+    pub fn new_fg(bg: Color, fg: Color, character: char, id: i32) -> Tile{
         Tile{
             bg: Some(bg),
             fg: Some(fg),
-            character
+            character,
+            id
         }
     }
 
@@ -97,6 +166,12 @@ impl Tile{
         }
         val.push(self.character);
         return val
+    }
+}
+
+impl PartialEq for Tile{
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id && self.bg == other.bg && self.fg == other.fg
     }
 }
 
