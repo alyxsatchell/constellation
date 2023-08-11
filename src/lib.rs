@@ -20,7 +20,7 @@ mod tests {
     }
     #[test]
     fn test_stencil_draw(){
-        let mut canvas = Canvas::new((10,10), Color::new(0,0,0,true));
+        let mut canvas = Canvas::new((10,10), (10,10), Color::new(0,0,0,true));
         let test_stencil = TestStencil{};
         canvas.update(test_stencil.get_map());
         canvas.draw();

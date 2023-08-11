@@ -16,3 +16,4 @@ name = "constellation_bin"
 path = "src/main.rs"
 
 [dependencies]
+termion = "1.5.5"

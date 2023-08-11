@@ -1,4 +1,6 @@
-use std::{fmt::Display, ops::Add};
+use std::{fmt::Display, ops::Add, io::{stdout, Write}};
+
+use termion::raw::IntoRawMode;
 
 use crate::stencil::{StencilMap, Transformation};
 
@@ -17,12 +19,12 @@ const BLACK_TILE: Tile = Tile{
 
 #[derive(Debug, Copy, Clone)]
 pub struct Point{
-    pub x: usize,
-    pub y: usize
+    pub x: i32,
+    pub y: i32
 }
 
-impl From<Point> for (usize, usize) {
-    fn from(point: Point) -> (usize, usize) {
+impl From<Point> for (i32, i32) {
+    fn from(point: Point) -> (i32, i32) {
         let Point { x, y } = point;
         (x, y)
     }
@@ -42,19 +44,29 @@ impl Add for Point{
 pub struct Canvas{
     tiles: TileMap,
     size: Point,
-
+    origin: Point,
 }
 
 impl Canvas{
-    pub fn new(size: (usize, usize), default_color: Color) -> Canvas{
-        let size: Point = Point { x: size.0, y: size.1 };
+    pub fn new(origin: (usize, usize), size: (usize, usize), default_color: Color) -> Canvas{
+        stdout().into_raw_mode().expect("Couldn't Initialize Canvas");
+        let size: Point = Point { x: size.0 as i32, y: size.1 as i32 };
+        let origin: Point = Point { x: origin.0 as i32, y: origin.1 as i32};
+        stdout().write_fmt(format_args!("\x1b[2J")).expect("Failed To Clear");
         Canvas { 
             tiles: TileMap::new(size, default_color), 
-            size}
+            size,
+            origin
+        }
     }
 
     pub fn draw(&self){
-        println!("{}", self.tiles.to_string());
+        stdout().write_fmt(format_args!("\x1b[{};1H", self.origin.y + 1)).expect("Failed To Write");
+        for line in self.tiles.get_lines(){
+            stdout().write_fmt(format_args!("\x1b[{}C{}\n", self.origin.x, line)).expect("Failed To Write Line");
+            stdout().write_fmt(format_args!("\r")).expect("Failed To Write");
+        }
+        stdout().flush().expect("Failed To Flush");
     }
 
     pub fn update(&mut self, stencilmap: StencilMap){
@@ -84,6 +96,19 @@ impl TileMap{
         }
     }
 
+    pub fn get_lines(&self) -> Vec<String>{
+        let mut string_vec = Vec::new();
+        for row in &self.map{
+            let mut tmp = String::new();
+            for tile in row{
+                tmp += &tile.to_string();
+            }
+            tmp += "\x1b[0m";
+            string_vec.push(tmp);
+        }
+        return string_vec
+    }
+
     pub fn to_string(&self) -> String{
         let mut string = String::new();
         for row in &self.map{
@@ -108,23 +133,29 @@ impl TileMap{
 
     fn replace(&mut self, trans: Transformation){
         let (x, y) = trans.origin.into();
+        if x < 0 || y < 0{
+            return
+        }
         let id = trans.tile.id;
         self.insert(trans.translation(), trans.tile);
         let default_tile = &self.default_tile;
-        if id == self.map[y][x].id{
+        if id == self.map[y as usize][x as usize].id{
             self.insert(trans.previous_translation(), *default_tile);
         }
     }
 
     fn insert(&mut self, coord: Point, tile: Tile){
         let (x,y) = coord.into();
-        if y >= self.map.len(){
+        if x < 0 || y < 0{
             return
         }
-        if x >= self.map[y].len(){
+        if y as usize >= self.map.len(){
             return
         }
-        self.map[y][x] = tile;
+        if x as usize >= self.map[y as usize].len(){
+            return
+        }
+        self.map[y as usize][x as usize] = tile;
     }
 }
 
