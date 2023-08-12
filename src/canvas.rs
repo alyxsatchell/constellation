@@ -2,7 +2,7 @@ use std::{fmt::Display, ops::Add, io::{stdout, Write}};
 
 use termion::raw::IntoRawMode;
 
-use crate::stencil::{StencilMap, Transformation};
+use crate::stencil::{StencilMap};
 
 const BLACK_BG: Color = Color{
     background: true,
@@ -17,7 +17,7 @@ const BLACK_TILE: Tile = Tile{
     character: ' '
 };
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct Point{
     pub x: i32,
     pub y: i32
@@ -123,24 +123,14 @@ impl TileMap{
     }
 
     pub fn draw_stencilmap(&mut self, stencilmap: StencilMap){
-        for trans in stencilmap{
-            match trans.previous_origin{
-                Some(_) => self.replace(trans),
-                None => self.insert(trans.translation(), trans.tile),
-            }
+        //draw the addition
+        for i in stencilmap.addition_map{
+            let (point, tile) = i;
+            self.insert(point, tile);
         }
-    }
-
-    fn replace(&mut self, trans: Transformation){
-        let (x, y) = trans.origin.into();
-        if x < 0 || y < 0{
-            return
-        }
-        let id = trans.tile.id;
-        self.insert(trans.translation(), trans.tile);
-        let default_tile = &self.default_tile;
-        if id == self.map[y as usize][x as usize].id{
-            self.insert(trans.previous_translation(), *default_tile);
+        for point in stencilmap.subtraction_map{
+            //might need a safeguard depending on reasonable assumptions
+            self.insert(point, self.default_tile);
         }
     }
 
