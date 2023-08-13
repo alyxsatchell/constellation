@@ -1,5 +1,6 @@
 use std::{collections::HashMap, mem};
 
+use crate::debug_logger::debug_log;
 use crate::canvas::{Tile, Point};
 
 pub trait Stencil{
@@ -7,7 +8,10 @@ pub trait Stencil{
 
     fn get_map_mut(&mut self) -> &mut StencilMap;
 
-    fn generate_new_map(&self) -> HashMap<Point, Tile>;
+    //a default that can be overridden if desired
+    fn generate_new_map(&self) -> HashMap<Point, Tile> {
+        HashMap::new()
+    }
 
     fn merge(&mut self, new_map: HashMap<Point, Tile>){
         self.get_map_mut().merge(new_map)
@@ -18,10 +22,12 @@ pub trait Stencil{
     }
 }
 
+#[derive(Debug)]
 pub struct StencilMap{
+    pub origin: Point,
     pub addition_map: HashMap<Point, Tile>,
     pub subtraction_map: Vec<Point>,
-    current_map: HashMap<Point, Tile>
+    pub current_map: HashMap<Point, Tile>
 }
 
 impl StencilMap{
@@ -50,6 +56,7 @@ impl StencilMap{
             }
         }
         //checks the remaining points that are new to new_map
+        // debug_log(&format!("{:?}", &new_map));
         for i in new_map{
             let (point, tile) = i;
             addition_map.insert(point, tile);
@@ -57,6 +64,24 @@ impl StencilMap{
         }
         self.addition_map = addition_map;
         self.subtraction_map = subtraction_map;
+    }
+
+    pub fn translate(&mut self, translation: Point){
+        debug_log("test");
+        let new_map = self.translate_map(translation);
+        self.merge(new_map);
+        self.origin += translation;
+    }
+
+    fn translate_map(&self, translation: Point) -> HashMap<Point, Tile>{
+        let mut new_map = HashMap::new();
+        for i in &self.current_map{
+            let (point, tile) = i;
+            let new_point = *point + translation;
+            new_map.insert(new_point, *tile);
+        }
+        debug_log(&format!("|{:?}||{:?}|", new_map, &self.current_map));
+        return new_map
     }
 }
 

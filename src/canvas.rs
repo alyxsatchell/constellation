@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Add, io::{stdout, Write}};
+use std::{fmt::Display, ops::{Add, AddAssign}, io::{stdout, Write}};
 
 use termion::raw::IntoRawMode;
 
@@ -41,6 +41,13 @@ impl Add for Point{
     }
 }
 
+impl AddAssign for Point{
+    fn add_assign(&mut self, rhs: Self) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+    }
+}
+
 pub struct Canvas{
     tiles: TileMap,
     size: Point,
@@ -69,7 +76,7 @@ impl Canvas{
         stdout().flush().expect("Failed To Flush");
     }
 
-    pub fn update(&mut self, stencilmap: StencilMap){
+    pub fn update(&mut self, stencilmap: &StencilMap){
         self.tiles.draw_stencilmap(stencilmap);
     }
 }
@@ -122,15 +129,15 @@ impl TileMap{
         string
     }
 
-    pub fn draw_stencilmap(&mut self, stencilmap: StencilMap){
+    pub fn draw_stencilmap(&mut self, stencilmap: &StencilMap){
         //draw the addition
-        for i in stencilmap.addition_map{
+        for i in &stencilmap.addition_map{
             let (point, tile) = i;
-            self.insert(point, tile);
+            self.insert(*point, *tile);
         }
-        for point in stencilmap.subtraction_map{
+        for point in &stencilmap.subtraction_map{
             //might need a safeguard depending on reasonable assumptions
-            self.insert(point, self.default_tile);
+            self.insert(*point, self.default_tile);
         }
     }
 
