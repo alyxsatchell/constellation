@@ -57,11 +57,11 @@ mod tests {
         canvas.update(&test_stencil_map);
         canvas.draw();
         println!("{:?}", test_stencil_map);
-        for j in 0..100000000{
+        for _ in 0..100000000{
             let f: f32 = 1.1234251324124;
-            f.sqrt();
+            let _ = f.sqrt();
         }
-        for i in 1..5{
+        for _ in 1..5{
             test_stencil_map.translate(addition);
             // let new_origin = origin + addition;
             // let new = HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]);
@@ -69,9 +69,9 @@ mod tests {
             canvas.update(&test_stencil_map);
             canvas.draw();
             println!("{:?}", &test_stencil_map);
-            for j in 0..100000000{
+            for _ in 0..100000000{
                 let f: f32 = 1.1234251324124;
-                f.sqrt();
+                let _ = f.sqrt();
             }
         }
     }

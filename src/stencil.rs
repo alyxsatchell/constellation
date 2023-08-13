@@ -34,7 +34,7 @@ impl StencilMap{
     pub fn merge(&mut self, mut new_map: HashMap<Point, Tile>){
         let mut addition_map = HashMap::new();
         let mut subtraction_map = Vec::new();
-        let mut current_map: HashMap<Point, Tile> = mem::replace(&mut self.current_map, HashMap::new());
+        let current_map: HashMap<Point, Tile> = mem::replace(&mut self.current_map, HashMap::new());
         //checks what points of the old map are still relevant
         for i in current_map{
             let (point, tile) = i;

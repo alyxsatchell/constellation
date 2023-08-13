@@ -2,20 +2,7 @@ use std::{fmt::Display, ops::{Add, AddAssign}, io::{stdout, Write}};
 
 use termion::raw::IntoRawMode;
 
-use crate::stencil::{StencilMap};
-
-const BLACK_BG: Color = Color{
-    background: true,
-    r: 0,
-    b: 0,
-    g: 0
-};
-const BLACK_TILE: Tile = Tile{
-    id: 0,
-    bg: Some(BLACK_BG),
-    fg: None,
-    character: ' '
-};
+use crate::stencil::StencilMap;
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct Point{
@@ -90,9 +77,9 @@ pub struct TileMap{
 impl TileMap{
     pub fn new(size: Point, default_color: Color) -> TileMap{
         let mut map = Vec::new();
-        for i in 0..size.y {
+        for _ in 0..size.y {
             let mut tmp: Vec<Tile> = Vec::new();
-            for j in 0..size.x{
+            for _ in 0..size.x{
                 tmp.push(Tile::new(default_color, 0));
             }
             map.push(tmp);
