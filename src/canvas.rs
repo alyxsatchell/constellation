@@ -2,20 +2,7 @@ use std::{fmt::Display, ops::{Add, AddAssign}, io::{stdout, Write}};
 
 use termion::raw::IntoRawMode;
 
-use crate::stencil::{StencilMap};
-
-const BLACK_BG: Color = Color{
-    background: true,
-    r: 0,
-    b: 0,
-    g: 0
-};
-const BLACK_TILE: Tile = Tile{
-    id: 0,
-    bg: Some(BLACK_BG),
-    fg: None,
-    character: ' '
-};
+use crate::stencil::StencilMap;
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct Point{
@@ -90,16 +77,16 @@ pub struct TileMap{
 impl TileMap{
     pub fn new(size: Point, default_color: Color) -> TileMap{
         let mut map = Vec::new();
-        for i in 0..size.y {
+        for _ in 0..size.y {
             let mut tmp: Vec<Tile> = Vec::new();
-            for j in 0..size.x{
-                tmp.push(Tile::new(default_color, 0));
+            for _ in 0..size.x{
+                tmp.push(Tile::new(default_color));
             }
             map.push(tmp);
         }
         TileMap { 
             map,
-            default_tile: Tile::new(default_color, 0),
+            default_tile: Tile::new(default_color),
         }
     }
 
@@ -158,23 +145,21 @@ impl TileMap{
 
 #[derive(Debug, Copy, Clone)]
 pub struct Tile{
-    id: i32,
     bg: Option<Color>,
     fg: Option<Color>,
     character: char,
 }
 
 impl Tile{
-    pub fn new(color: Color, id: i32) -> Tile{
-        Tile { bg: Some(color), fg: None, character: ' ', id }
+    pub fn new(color: Color) -> Tile{
+        Tile { bg: Some(color), fg: None, character: ' '}
     }
 
-    pub fn new_fg(bg: Color, fg: Color, character: char, id: i32) -> Tile{
+    pub fn new_fg(bg: Color, fg: Color, character: char) -> Tile{
         Tile{
             bg: Some(bg),
             fg: Some(fg),
             character,
-            id
         }
     }
 
@@ -199,7 +184,7 @@ impl Tile{
 
 impl PartialEq for Tile{
     fn eq(&self, other: &Self) -> bool {
-        self.id == other.id && self.bg == other.bg && self.fg == other.fg
+        self.bg == other.bg && self.fg == other.fg
     }
 }
 
