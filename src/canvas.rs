@@ -80,13 +80,13 @@ impl TileMap{
         for _ in 0..size.y {
             let mut tmp: Vec<Tile> = Vec::new();
             for _ in 0..size.x{
-                tmp.push(Tile::new(default_color, 0));
+                tmp.push(Tile::new(default_color));
             }
             map.push(tmp);
         }
         TileMap { 
             map,
-            default_tile: Tile::new(default_color, 0),
+            default_tile: Tile::new(default_color),
         }
     }
 
@@ -145,23 +145,21 @@ impl TileMap{
 
 #[derive(Debug, Copy, Clone)]
 pub struct Tile{
-    id: i32,
     bg: Option<Color>,
     fg: Option<Color>,
     character: char,
 }
 
 impl Tile{
-    pub fn new(color: Color, id: i32) -> Tile{
-        Tile { bg: Some(color), fg: None, character: ' ', id }
+    pub fn new(color: Color) -> Tile{
+        Tile { bg: Some(color), fg: None, character: ' '}
     }
 
-    pub fn new_fg(bg: Color, fg: Color, character: char, id: i32) -> Tile{
+    pub fn new_fg(bg: Color, fg: Color, character: char) -> Tile{
         Tile{
             bg: Some(bg),
             fg: Some(fg),
             character,
-            id
         }
     }
 
@@ -186,7 +184,7 @@ impl Tile{
 
 impl PartialEq for Tile{
     fn eq(&self, other: &Self) -> bool {
-        self.id == other.id && self.bg == other.bg && self.fg == other.fg
+        self.bg == other.bg && self.fg == other.fg
     }
 }
 

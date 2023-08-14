@@ -67,7 +67,6 @@ impl StencilMap{
             }
         }
         //checks the remaining points that are new to new_map
-        // debug_log(&format!("{:?}", &new_map));
         for i in new_map{
             let (point, tile) = i;
             addition_map.insert(point, tile);
@@ -78,7 +77,6 @@ impl StencilMap{
     }
 
     pub fn translate(&mut self, translation: Point){
-        debug_log("test");
         let new_map = self.translate_map(translation);
         self.merge(new_map);
         self.origin += translation;
@@ -91,9 +89,6 @@ impl StencilMap{
             let new_point = *point + translation;
             new_map.insert(new_point, *tile);
         }
-        debug_log(&format!("sub: {:?}", &self.subtraction_map));
-        debug_log(&format!("add: {:?}", &self.addition_map));
-        debug_log(&format!("|{:?}||{:?}|", new_map, &self.current_map));
         return new_map
     }
 }
