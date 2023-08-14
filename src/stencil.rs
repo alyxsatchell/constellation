@@ -31,6 +31,17 @@ pub struct StencilMap{
 }
 
 impl StencilMap{
+    pub fn new(origin: Point, map: HashMap<Point, Tile>) -> StencilMap{
+        let mut sm = StencilMap { 
+            origin, 
+            addition_map: HashMap::new(), 
+            subtraction_map: Vec::new(), 
+            current_map: HashMap::new()
+        };
+        sm.merge(map);
+        sm
+    }
+
     pub fn merge(&mut self, mut new_map: HashMap<Point, Tile>){
         let mut addition_map = HashMap::new();
         let mut subtraction_map = Vec::new();
@@ -80,38 +91,9 @@ impl StencilMap{
             let new_point = *point + translation;
             new_map.insert(new_point, *tile);
         }
+        debug_log(&format!("sub: {:?}", &self.subtraction_map));
+        debug_log(&format!("add: {:?}", &self.addition_map));
         debug_log(&format!("|{:?}||{:?}|", new_map, &self.current_map));
         return new_map
     }
 }
-
-// pub struct Transformation{
-//     movement: Point,
-// }
-
-// #[derive(Debug, Clone, Copy)]
-// pub struct Translation{
-//     pub origin: Point,
-//     pub previous_origin: Option<Point>,
-//     pub coord: Point,
-//     pub tile: Tile
-// }
-
-// impl Translation{
-//     pub fn new(coord: Point, origin: Point, previous_origin: Option<Point>, tile: Tile) -> Translation{
-//         Translation { 
-//             coord,
-//             origin,
-//             previous_origin,
-//             tile
-//         }
-//     }
-
-//     pub fn translation(&self) -> Point{
-//         return self.coord + self.origin
-//     }
-
-//     pub fn previous_translation(&self) -> Point{
-//         return self.coord + self.previous_origin.unwrap()
-//     }
-// }
