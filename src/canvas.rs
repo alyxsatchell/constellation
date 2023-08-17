@@ -2,7 +2,7 @@ use std::{fmt::Display, ops::{Add, AddAssign}, io::{stdout, Write}};
 
 use termion::raw::IntoRawMode;
 
-use crate::stencil::StencilMap;
+use crate::{stencil::StencilMap, debug_logger::debug_log};
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct Point{
@@ -37,7 +37,7 @@ impl AddAssign for Point{
 
 pub struct Canvas{
     tiles: TileMap,
-    size: Point,
+    pub size: Point,
     origin: Point,
 }
 
@@ -54,16 +54,17 @@ impl Canvas{
         }
     }
 
-    pub fn draw(&self){
+    pub fn draw(&mut self){
         stdout().write_fmt(format_args!("\x1b[{};1H", self.origin.y + 1)).expect("Failed To Write");
         for line in self.tiles.get_lines(){
             stdout().write_fmt(format_args!("\x1b[{}C{}\n", self.origin.x, line)).expect("Failed To Write Line");
             stdout().write_fmt(format_args!("\r")).expect("Failed To Write");
         }
         stdout().flush().expect("Failed To Flush");
+        self.tiles.ticker += 1;
     }
 
-    pub fn update(&mut self, stencilmap: &StencilMap){
+    pub fn update(&mut self, stencilmap: &mut StencilMap){
         self.tiles.draw_stencilmap(stencilmap);
     }
 }
@@ -71,7 +72,8 @@ impl Canvas{
 #[derive(Debug)]
 pub struct TileMap{
     default_tile: Tile,
-    map: Vec<Vec<Tile>>
+    map: Vec<Vec<Tile>>,
+    ticker: i32,
 }
 
 impl TileMap{
@@ -80,13 +82,14 @@ impl TileMap{
         for _ in 0..size.y {
             let mut tmp: Vec<Tile> = Vec::new();
             for _ in 0..size.x{
-                tmp.push(Tile::new(default_color));
+                tmp.push(Tile::new(default_color, -1));
             }
             map.push(tmp);
         }
         TileMap { 
             map,
-            default_tile: Tile::new(default_color),
+            default_tile: Tile::new(default_color, -1),
+            ticker: 1,
         }
     }
 
@@ -116,15 +119,23 @@ impl TileMap{
         string
     }
 
-    pub fn draw_stencilmap(&mut self, stencilmap: &StencilMap){
+    pub fn draw_stencilmap(&mut self, stencilmap: &mut StencilMap){
         //draw the addition
-        for i in &stencilmap.addition_map{
+        for i in &mut stencilmap.addition_map{
             let (point, tile) = i;
+            tile.id = self.ticker;
+            if self.ticker == 1{
+                tile.id -= 1;
+            }
+            debug_log(&format!("{}, self.ticker ", self.ticker));
             self.insert(*point, *tile);
         }
         for point in &stencilmap.subtraction_map{
             //might need a safeguard depending on reasonable assumptions
-            self.insert(*point, self.default_tile);
+            debug_log(&format!("Points being deleted {}", self.map[point.y as usize][point.x as usize].id ));
+            if self.ticker - 1 != self.map[point.y as usize][point.x as usize].id{
+                self.insert(*point, self.default_tile);
+            }
         }
     }
 
@@ -148,18 +159,20 @@ pub struct Tile{
     bg: Option<Color>,
     fg: Option<Color>,
     character: char,
+    id: i32,
 }
 
 impl Tile{
-    pub fn new(color: Color) -> Tile{
-        Tile { bg: Some(color), fg: None, character: ' '}
+    pub fn new(color: Color, id: i32) -> Tile{
+        Tile { bg: Some(color), fg: None, character: ' ', id}
     }
 
-    pub fn new_fg(bg: Color, fg: Color, character: char) -> Tile{
+    pub fn new_fg(bg: Color, fg: Color, character: char, id: i32) -> Tile{
         Tile{
             bg: Some(bg),
             fg: Some(fg),
             character,
+            id
         }
     }
 
@@ -191,9 +204,9 @@ impl PartialEq for Tile{
 #[derive(Clone,Copy, Debug)]
 pub struct Color{
     background: bool,
-    r: u8,
-    g: u8,
-    b: u8
+    pub r: u8,
+    pub g: u8,
+    pub b: u8
 }
 
 impl Color{
