@@ -1,3 +1,4 @@
+use std::hash::Hash;
 use std::{collections::HashMap, mem};
 
 use crate::debug_logger::debug_log;
@@ -26,7 +27,7 @@ pub trait Stencil{
 pub struct StencilMap{
     pub origin: Point,
     pub addition_map: HashMap<Point, Tile>,
-    pub subtraction_map: Vec<Point>,
+    pub subtraction_map: HashMap<Point, Tile>,
     pub current_map: HashMap<Point, Tile>
 }
 
@@ -35,7 +36,7 @@ impl StencilMap{
         let mut sm = StencilMap { 
             origin, 
             addition_map: HashMap::new(), 
-            subtraction_map: Vec::new(), 
+            subtraction_map: HashMap::new(), 
             current_map: HashMap::new()
         };
         sm.merge(map);
@@ -44,7 +45,7 @@ impl StencilMap{
 
     pub fn merge(&mut self, mut new_map: HashMap<Point, Tile>){
         let mut addition_map = HashMap::new();
-        let mut subtraction_map = Vec::new();
+        let mut subtraction_map = HashMap::new();
         let current_map: HashMap<Point, Tile> = mem::replace(&mut self.current_map, HashMap::new());
         //checks what points of the old map are still relevant
         for i in current_map{
@@ -52,7 +53,8 @@ impl StencilMap{
             //checks if the point is going to also be present in the next map
             //if it is not, then it needs to be in the sub map
             if !new_map.contains_key(&point){
-                subtraction_map.push(point);
+                // subtraction_map.push(point);
+                subtraction_map.insert(point, tile);
             }
             //if it is present, it then checks if the tile has changed to be added to the add map
             else{

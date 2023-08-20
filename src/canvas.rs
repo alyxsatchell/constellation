@@ -61,28 +61,33 @@ impl Canvas{
             stdout().write_fmt(format_args!("\r")).expect("Failed To Write");
         }
         stdout().flush().expect("Failed To Flush");
-        self.tiles.ticker += 1;
+        self.tiles.ticker = self.tiles.ticker.wrapping_add(1);
     }
 
     pub fn update(&mut self, stencilmap: &mut StencilMap){
         self.tiles.draw_stencilmap(stencilmap);
+    }
+
+    pub fn update_mult(&mut self, stencilmaps: Vec<&mut StencilMap>){
+        self.tiles.draw_stencilmaps(stencilmaps);
     }
 }
 
 #[derive(Debug)]
 pub struct TileMap{
     default_tile: Tile,
-    map: Vec<Vec<Tile>>,
+    map: Vec<Vec<Vec<Tile>>>,
     ticker: i32,
 }
 
 impl TileMap{
     pub fn new(size: Point, default_color: Color) -> TileMap{
-        let mut map = Vec::new();
+        let mut map: Vec<Vec<Vec<Tile>>> = Vec::new();
         for _ in 0..size.y {
-            let mut tmp: Vec<Tile> = Vec::new();
+            let mut tmp: Vec<Vec<Tile>> = Vec::new();
             for _ in 0..size.x{
-                tmp.push(Tile::new(default_color, -1));
+                // tmp.push(Tile::new(default_color, -1));
+                tmp.push(Vec::new());
             }
             map.push(tmp);
         }
@@ -97,8 +102,14 @@ impl TileMap{
         let mut string_vec = Vec::new();
         for row in &self.map{
             let mut tmp = String::new();
-            for tile in row{
-                tmp += &tile.to_string();
+            for tile_vec in row{
+                if tile_vec.is_empty(){
+                    tmp += &self.default_tile.to_string();
+                }
+                else{
+                    let index = tile_vec.len() - 1;
+                    tmp += &tile_vec[index].to_string();
+                }
             }
             tmp += "\x1b[0m";
             string_vec.push(tmp);
@@ -109,8 +120,14 @@ impl TileMap{
     pub fn to_string(&self) -> String{
         let mut string = String::new();
         for row in &self.map{
-            for tile in row{
-                string += &tile.to_string();
+            for tile_vec in row{
+                if tile_vec.is_empty(){
+                    string += &self.default_tile.to_string();
+                }
+                else{
+                    let index = tile_vec.len() - 1;
+                    string += &tile_vec[index].to_string();
+                }
             }
             string += "\x1b[0m";
             string.push('\n');
@@ -119,38 +136,69 @@ impl TileMap{
         string
     }
 
+    fn check_bounds(&self, point: &Point) -> bool{
+        let (x,y): (i32, i32) = Into::<(i32,i32)>::into(*point);
+        if x < 0 || y < 0{
+            return false
+        }
+        if y as usize >= self.map.len(){
+            return false
+        }
+        if x as usize >= self.map[y as usize].len(){
+            return false
+        }
+        return true
+    }
+
     pub fn draw_stencilmap(&mut self, stencilmap: &mut StencilMap){
         //draw the addition
         for i in &mut stencilmap.addition_map{
             let (point, tile) = i;
-            tile.id = self.ticker;
-            if self.ticker == 1{
-                tile.id -= 1;
-            }
-            debug_log(&format!("{}, self.ticker ", self.ticker));
             self.insert(*point, *tile);
         }
-        for point in &stencilmap.subtraction_map{
+        for (point, tile) in &stencilmap.subtraction_map{
             //might need a safeguard depending on reasonable assumptions
-            debug_log(&format!("Points being deleted {}", self.map[point.y as usize][point.x as usize].id ));
-            if self.ticker - 1 != self.map[point.y as usize][point.x as usize].id{
-                self.insert(*point, self.default_tile);
+            // if self.check_bounds(point) && self.ticker - 1 != self.map[point.y as usize][point.x as usize].id{
+            self.insert(*point, self.default_tile);
+            // }
+        }
+    }
+
+    pub fn draw_stencilmaps(&mut self, stencilmaps: Vec<&mut StencilMap>){
+        for stencilmap in &stencilmaps{
+            for (point, tile) in &stencilmap.subtraction_map{
+                self.subtract(*point, *tile);
+            }
+        }
+        for stencilmap in stencilmaps{
+            for i in &mut stencilmap.addition_map{
+                let (point, tile) = i;
+                self.insert(*point, *tile);
             }
         }
     }
 
-    fn insert(&mut self, coord: Point, tile: Tile){
+    fn subtract(&mut self, coord: Point, tile: Tile){
+        if !self.check_bounds(&coord){
+            return;
+        }
         let (x,y) = coord.into();
-        if x < 0 || y < 0{
-            return
+        let mut counter = 0;
+        for map_tile in &mut self.map[y as usize][x as usize]{
+            if map_tile == &tile{
+                break;
+            }
+            counter += 1;
         }
-        if y as usize >= self.map.len(){
-            return
+        &mut self.map[y as usize][x as usize].remove(counter);
+    }
+
+    fn insert(&mut self, coord: Point, tile: Tile){
+        if !self.check_bounds(&coord){
+            return;
         }
-        if x as usize >= self.map[y as usize].len(){
-            return
-        }
-        self.map[y as usize][x as usize] = tile;
+        let (x,y) = coord.into();
+        self.map[y as usize][x as usize].push(tile);
     }
 }
 

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::Hash};
 
 use constellation::{canvas::*, stencil::StencilMap};
 
@@ -8,7 +8,7 @@ fn main() {
     let addition = Point{x:1, y: 0};
     let current_map = HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]);
     let add = HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]);
-    let sub: Vec<Point> = Vec::new();
+    let sub: HashMap<Point, Tile> = HashMap::new();
     let mut test_stencil_map: StencilMap = StencilMap{
         origin: Point { x: 0, y: 0 },
         addition_map: add,
