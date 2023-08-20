@@ -25,7 +25,7 @@ mod tests {
     #[test]
     fn test_stencil_draw(){
         let mut canvas = Canvas::new((10,10), (10,10), Color::new(0,0,0,true));
-        let tile = Tile::new(Color::new(0, 200, 200, true), -1);
+        let tile = Tile::new(Color::new(0, 200, 200, true));
         let current_map = HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]);
         let add = HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]);
         let sub: HashMap<Point, Tile> = HashMap::new();
@@ -43,7 +43,7 @@ mod tests {
     #[test]
     fn test_animation(){
         let mut canvas = Canvas::new((10,10), (10,10), Color::new(0,0,0,true));
-        let tile = Tile::new(Color::new(0, 200, 200, true), -1);
+        let tile = Tile::new(Color::new(0, 200, 200, true));
         let addition = Point{x:1, y: 0};
         let mut test_stencil_map = StencilMap::new(Point{x:0, y:0}, HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]));
         canvas.update(&mut test_stencil_map);
@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn test_overlap(){
         let mut canvas = Canvas::new((10,10), (10,10), Color::new(0,0,0,true));
-        let tile = Tile::new(Color::new(0, 200, 200, true), -1);
+        let tile = Tile::new(Color::new(0, 200, 200, true));
         let addition = Point{x:1, y: 0};
         let subtraction = Point{x:-1, y:0};
         let mut test_stencil_map = StencilMap::new(Point{x:0, y:0}, HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]));
@@ -99,11 +99,8 @@ mod tests {
         for i in 10..19{
             test_stencil_map.translate(subtraction);
             test_stencil_map2.translate(addition);
-            debug_log(&format!("{}{:?}", i, &test_stencil_map));
-            // debug_log(&format!("{} {:?}", i, &test_stencil_map2));
-            canvas.update(&mut test_stencil_map2);
-            canvas.update(&mut test_stencil_map);
-            // canvas.update(&test_stencil_map2);
+            let stencil_vec = vec![&mut test_stencil_map, &mut test_stencil_map2];
+            canvas.update_mult(stencil_vec);
             canvas.draw();
             for _ in 0..100000000{
                 let f: f32 = 1.1234251324124;
