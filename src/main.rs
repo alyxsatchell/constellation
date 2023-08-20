@@ -4,7 +4,7 @@ use constellation::{canvas::*, stencil::StencilMap};
 
 fn main() {
     let mut canvas = Canvas::new((10,10), (10,10), Color::new(0,0,0,true));
-    let tile = Tile::new(Color::new(0, 200, 200, true), 0);
+    let tile = Tile::new(Color::new(0, 200, 200, true));
     let addition = Point{x:1, y: 0};
     let current_map = HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]);
     let add = HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]);

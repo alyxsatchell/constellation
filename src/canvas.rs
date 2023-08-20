@@ -93,7 +93,7 @@ impl TileMap{
         }
         TileMap { 
             map,
-            default_tile: Tile::new(default_color, -1),
+            default_tile: Tile::new(default_color),
             ticker: 1,
         }
     }
@@ -207,20 +207,18 @@ pub struct Tile{
     bg: Option<Color>,
     fg: Option<Color>,
     character: char,
-    id: i32,
 }
 
 impl Tile{
-    pub fn new(color: Color, id: i32) -> Tile{
-        Tile { bg: Some(color), fg: None, character: ' ', id}
+    pub fn new(color: Color) -> Tile{
+        Tile { bg: Some(color), fg: None, character: ' '}
     }
 
-    pub fn new_fg(bg: Color, fg: Color, character: char, id: i32) -> Tile{
+    pub fn new_fg(bg: Color, fg: Color, character: char) -> Tile{
         Tile{
             bg: Some(bg),
             fg: Some(fg),
             character,
-            id
         }
     }
 
