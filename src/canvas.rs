@@ -1,8 +1,8 @@
-use std::{fmt::Display, ops::{Add, AddAssign}, io::{stdout, Write}};
+use std::{fmt::Display, ops::{Add, AddAssign}, io::{stdout, Write}, sync::Mutex};
 
 use termion::raw::IntoRawMode;
 
-use crate::{stencil::StencilMap, debug_logger::debug_log};
+use crate::{stencil::{StencilMap, Stencil}, debug_logger::debug_log};
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct Point{
@@ -70,6 +70,14 @@ impl Canvas{
 
     pub fn update_mult(&mut self, stencilmaps: Vec<&mut StencilMap>){
         self.tiles.draw_stencilmaps(stencilmaps);
+    }
+
+    pub fn update_stencils(&mut self, stencils: Vec<&mut dyn Stencil>){
+        self.tiles.draw_stencils(stencils);
+    }
+
+    pub fn update_stencils_mutex(&mut self, stencils: &Vec<Mutex<Box<dyn Stencil>>>){
+        self.tiles.draw_stencils_mutex(stencils)
     }
 }
 
@@ -172,6 +180,34 @@ impl TileMap{
         }
         for stencilmap in stencilmaps{
             for i in &mut stencilmap.addition_map{
+                let (point, tile) = i;
+                self.insert(*point, *tile);
+            }
+        }
+    }
+
+    pub fn draw_stencils(&mut self, mut stencils: Vec<&mut dyn Stencil>){
+        for stencil in &mut stencils{
+            for (point, tile) in &mut stencil.get_map_mut().subtraction_map{
+                self.subtract(*point, *tile);
+            }
+        }
+        for stencil in stencils{
+            for i in &mut stencil.get_map_mut().addition_map{
+                let (point, tile) = i;
+                self.insert(*point, *tile);
+            }
+        }
+    }
+
+    pub fn draw_stencils_mutex(&mut self, stencils: &Vec<Mutex<Box<dyn Stencil>>>){
+        for stencil in stencils{
+            for (point, tile) in &mut stencil.lock().unwrap().get_map_mut().subtraction_map{
+                self.subtract(*point, *tile);
+            }
+        }
+        for stencil in stencils{
+            for i in &mut stencil.lock().unwrap().get_map_mut().addition_map{
                 let (point, tile) = i;
                 self.insert(*point, *tile);
             }
