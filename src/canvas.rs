@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::{Add, AddAssign}, io::{stdout, Write}, sync::Mutex};
+use std::{fmt::Display, ops::{Add, AddAssign}, io::{stdout, Write}, sync::{Mutex, Arc}};
 
 use termion::raw::IntoRawMode;
 
@@ -77,7 +77,11 @@ impl Canvas{
     }
 
     pub fn update_stencils_mutex(&mut self, stencils: &Vec<Mutex<Box<dyn Stencil>>>){
-        self.tiles.draw_stencils_mutex(stencils)
+        self.tiles.draw_stencils_mutex(stencils);
+    }
+
+    pub fn update_stencils_arc_mutex(&mut self, stencils: &Vec<Arc<Mutex<Box<dyn Stencil>>>>){
+        self.tiles.draw_stencils_arc_mutex(stencils);
     }
 }
 
@@ -208,6 +212,20 @@ impl TileMap{
         }
         for stencil in stencils{
             for i in &mut stencil.lock().unwrap().get_map_mut().addition_map{
+                let (point, tile) = i;
+                self.insert(*point, *tile);
+            }
+        }
+    }
+
+    pub fn draw_stencils_arc_mutex(&mut self, stencils: &Vec<Arc<Mutex<Box<dyn Stencil>>>>){
+        for arc_stencil in stencils{
+            for (point, tile) in &mut arc_stencil.clone().lock().unwrap().get_map_mut().subtraction_map{
+                self.subtract(*point, *tile);
+            }
+        }
+        for arc_stencil in stencils{
+            for i in &mut arc_stencil.clone().lock().unwrap().get_map_mut().addition_map{
                 let (point, tile) = i;
                 self.insert(*point, *tile);
             }
