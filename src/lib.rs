@@ -1,13 +1,37 @@
 pub mod canvas;
 pub mod  stencil;
 pub mod debug_logger;
+pub mod stencil_buffer;
 
 #[cfg(test)]
 mod tests {
     use std::{collections::HashMap, sync::{Mutex, Arc}};
 
-    use crate::{stencil::{Stencil, StencilMap}, canvas::{Tile, Color, Canvas, Point}, debug_logger::debug_log};
+    use crate::{stencil::{Stencil, StencilMap}, canvas::{Tile, Color, Canvas, Point}, debug_logger::debug_log, stencil_buffer::StencilBuffer};
 
+    struct TestTraitStruct{
+        map: StencilMap,
+    }
+
+    impl TestTrait for TestTraitStruct{
+        fn get_map_mut2(&mut self) -> &mut StencilMap {
+            &mut self.map
+        }
+    }
+
+    trait TestTrait{
+        fn get_map_mut2(&mut self) -> &mut StencilMap;
+    }
+
+    impl Stencil for dyn TestTrait{
+        fn get_map(&self) -> &StencilMap {
+            todo!()
+        }
+
+        fn get_map_mut(&mut self) -> &mut StencilMap {
+            self.get_map_mut2()
+        }
+    }
 
     struct TestStencil{
         stencilmap: StencilMap,
@@ -63,6 +87,55 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_overlap_single(){
+        let mut canvas = Canvas::new((10,10), (10,10), Color::new(0,0,0,true));
+        let tile = Tile::new(Color::new(0, 200, 200, true));
+        let addition = Point{x:1, y: 0};
+        let subtraction = Point{x:-1, y:0};
+        let mut test_stencil_map = StencilMap::new(Point{x:0, y:0}, HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]));
+        let mut test_stencil_map2 = StencilMap::new(Point{x:8, y:0}, HashMap::from([(Point{x:9,y:0}, tile), (Point{x:8, y:0}, tile), (Point{x:9, y:1}, tile), (Point{x:8,y:1}, tile)]));
+        // let stencil_vec = vec![&mut test_stencil_map, &mut test_stencil_map2];
+        // canvas.update_mult(stencil_vec);
+        canvas.update(&mut test_stencil_map);
+        canvas.update(&mut test_stencil_map2);
+        canvas.draw();
+        for _ in 0..100000000{
+            let f: f32 = 1.1234251324124;
+            let _ = f.sqrt();
+        }
+        for i in 1..9{
+            test_stencil_map.translate(addition);
+            test_stencil_map2.translate(subtraction);
+            debug_log(&format!("{}{:?}", i, &test_stencil_map));
+            // let stencil_vec = vec![&mut test_stencil_map, &mut test_stencil_map2];
+            // canvas.update_mult(stencil_vec);
+            // debug_log(&format!("{} {:?}", i, &test_stencil_map2));
+            // canvas.update(&mut test_stencil_map2);
+            canvas.update(&mut test_stencil_map);
+            canvas.update(&mut test_stencil_map2);
+            canvas.draw();
+            for _ in 0..100000000{
+                let f: f32 = 1.1234251324124;
+                let _ = f.sqrt();
+            }
+        }
+        for i in 10..19{
+            test_stencil_map.translate(subtraction);
+            test_stencil_map2.translate(addition);
+            canvas.update(&mut test_stencil_map);
+            canvas.update(&mut test_stencil_map2);
+            // let stencil_vec = vec![&mut test_stencil_map, &mut test_stencil_map2];
+            // canvas.update_mult(stencil_vec);
+            canvas.draw();
+            for _ in 0..100000000{
+                let f: f32 = 1.1234251324124;
+                let _ = f.sqrt();
+            }
+        }
+    }
+
     #[test]
     fn test_overlap(){
         let mut canvas = Canvas::new((10,10), (10,10), Color::new(0,0,0,true));
@@ -224,5 +297,30 @@ mod tests {
                 let _ = f.sqrt();
             }
         }
+    }
+
+    // fn stencil_buffger_test_update<'a>(v: &'a Vec<Arc<Mutex<Box<dyn Stencil>>>>){
+    //     let mut test_buffer: StencilBuffer<'a> = StencilBuffer::new();
+    //     let mut testing = Vec::new();
+    //     for value in v{
+    //         testing.push(value);
+    //         // test_buffer.push(value.clone().lock().unwrap().get_map_mut())
+    //     }
+        //stencilbuffer needs to take type T then have an additional function to convert to the stencilmaps
+
+    // }
+
+    #[test]
+    fn stencil_buffer_test(){
+        let tile = Tile::new(Color::new(0, 200, 200, true));
+        let mut test_buffer: StencilBuffer<dyn TestTrait> = StencilBuffer::new();
+        let test1 = TestTraitStruct{map: StencilMap::new(Point{x:0, y:0}, HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]))};
+        let test2 = TestTraitStruct{map: StencilMap::new(Point{x:8, y:0}, HashMap::from([(Point{x:9,y:0}, tile), (Point{x:8, y:0}, tile), (Point{x:9, y:1}, tile), (Point{x:8,y:1}, tile)]))};
+        let test_vec: Vec<Box<dyn TestTrait>> = vec![Box::new(test1), Box::new(test2)];
+        for mut test_struct in test_vec{
+            // let tmp = *test_struct;
+            // test_buffer.push(&mut *test_struct);
+        }
+        // let test_buffer = StencilBuffer::new();
     }
 }

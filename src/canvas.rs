@@ -168,10 +168,9 @@ impl TileMap{
             let (point, tile) = i;
             self.insert(*point, *tile);
         }
+        //do the subtraction
         for (point, tile) in &stencilmap.subtraction_map{
-            //might need a safeguard depending on reasonable assumptions
-            // if self.check_bounds(point) && self.ticker - 1 != self.map[point.y as usize][point.x as usize].id{
-            self.insert(*point, self.default_tile);
+            self.subtract(*point, *tile);
             // }
         }
     }
@@ -237,14 +236,18 @@ impl TileMap{
             return;
         }
         let (x,y) = coord.into();
+        let mut found = false;
         let mut counter = 0;
         for map_tile in &mut self.map[y as usize][x as usize]{
             if map_tile == &tile{
+                found = true;
                 break;
             }
             counter += 1;
         }
-        &mut self.map[y as usize][x as usize].remove(counter);
+        if found{
+            self.map[y as usize][x as usize].remove(counter);
+        }
     }
 
     fn insert(&mut self, coord: Point, tile: Tile){
