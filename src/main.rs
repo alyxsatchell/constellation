@@ -5,12 +5,12 @@ use constellation::{canvas::*, stencil::StencilMap};
 fn main() {
     let mut canvas = Canvas::new((10,10), (10,10), Color::new(0,0,0,true));
     let tile = Tile::new(Color::new(0, 200, 200, true));
-    let addition = Point{x:1, y: 0};
-    let current_map = HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]);
-    let add = HashMap::from([(Point{x:0,y:0}, tile), (Point{x:1, y:0}, tile), (Point{x:0, y:1}, tile), (Point{x:1,y:1}, tile)]);
-    let sub: HashMap<Point, Tile> = HashMap::new();
+    let addition = Position{x:1, y: 0};
+    let current_map = HashMap::from([(Position{x:0,y:0}, tile), (Position{x:1, y:0}, tile), (Position{x:0, y:1}, tile), (Position{x:1,y:1}, tile)]);
+    let add = HashMap::from([(Position{x:0,y:0}, tile), (Position{x:1, y:0}, tile), (Position{x:0, y:1}, tile), (Position{x:1,y:1}, tile)]);
+    let sub: HashMap<Position, Tile> = HashMap::new();
     let mut test_stencil_map: StencilMap = StencilMap{
-        origin: Point { x: 0, y: 0 },
+        origin: Position { x: 0, y: 0 },
         addition_map: add,
         subtraction_map: sub,
         current_map,

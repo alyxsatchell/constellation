@@ -5,30 +5,30 @@ use termion::raw::IntoRawMode;
 use crate::{stencil::{StencilMap, Stencil}, debug_logger::debug_log};
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct Point{
+pub struct Position{
     pub x: i32,
     pub y: i32
 }
 
-impl From<Point> for (i32, i32) {
-    fn from(point: Point) -> (i32, i32) {
-        let Point { x, y } = point;
+impl From<Position> for (i32, i32) {
+    fn from(point: Position) -> (i32, i32) {
+        let Position { x, y } = point;
         (x, y)
     }
 }
 
-impl Add for Point{
+impl Add for Position{
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Point{
+        Position{
             x: self.x + rhs.x,
             y: self.y + rhs.y
         }
     }
 }
 
-impl AddAssign for Point{
+impl AddAssign for Position{
     fn add_assign(&mut self, rhs: Self) {
         self.x += rhs.x;
         self.y += rhs.y;
@@ -37,15 +37,15 @@ impl AddAssign for Point{
 
 pub struct Canvas{
     tiles: TileMap,
-    pub size: Point,
-    origin: Point,
+    pub size: Position,
+    origin: Position,
 }
 
 impl Canvas{
     pub fn new(origin: (usize, usize), size: (usize, usize), default_color: Color) -> Canvas{
         stdout().into_raw_mode().expect("Couldn't Initialize Canvas");
-        let size: Point = Point { x: size.0 as i32, y: size.1 as i32 };
-        let origin: Point = Point { x: origin.0 as i32, y: origin.1 as i32};
+        let size: Position = Position { x: size.0 as i32, y: size.1 as i32 };
+        let origin: Position = Position { x: origin.0 as i32, y: origin.1 as i32};
         stdout().write_fmt(format_args!("\x1b[2J")).expect("Failed To Clear");
         Canvas { 
             tiles: TileMap::new(size, default_color), 
@@ -93,7 +93,7 @@ pub struct TileMap{
 }
 
 impl TileMap{
-    pub fn new(size: Point, default_color: Color) -> TileMap{
+    pub fn new(size: Position, default_color: Color) -> TileMap{
         let mut map: Vec<Vec<Vec<Tile>>> = Vec::new();
         for _ in 0..size.y {
             let mut tmp: Vec<Vec<Tile>> = Vec::new();
@@ -148,7 +148,7 @@ impl TileMap{
         string
     }
 
-    fn check_bounds(&self, point: &Point) -> bool{
+    fn check_bounds(&self, point: &Position) -> bool{
         let (x,y): (i32, i32) = Into::<(i32,i32)>::into(*point);
         if x < 0 || y < 0{
             return false
@@ -231,7 +231,7 @@ impl TileMap{
         }
     }
 
-    fn subtract(&mut self, coord: Point, tile: Tile){
+    fn subtract(&mut self, coord: Position, tile: Tile){
         if !self.check_bounds(&coord){
             return;
         }
@@ -250,7 +250,7 @@ impl TileMap{
         }
     }
 
-    fn insert(&mut self, coord: Point, tile: Tile){
+    fn insert(&mut self, coord: Position, tile: Tile){
         if !self.check_bounds(&coord){
             return;
         }

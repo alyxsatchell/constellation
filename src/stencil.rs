@@ -2,7 +2,7 @@ use std::hash::Hash;
 use std::{collections::HashMap, mem};
 
 use crate::debug_logger::debug_log;
-use crate::canvas::{Tile, Point};
+use crate::canvas::{Tile, Position};
 
 pub trait Stencil{
     fn get_map(&self) -> &StencilMap;
@@ -10,11 +10,11 @@ pub trait Stencil{
     fn get_map_mut(&mut self) -> &mut StencilMap;
 
     //a default that can be overridden if desired
-    fn generate_new_map(&self) -> HashMap<Point, Tile> {
+    fn generate_new_map(&self) -> HashMap<Position, Tile> {
         HashMap::new()
     }
 
-    fn merge(&mut self, new_map: HashMap<Point, Tile>){
+    fn merge(&mut self, new_map: HashMap<Position, Tile>){
         self.get_map_mut().merge(new_map)
     }
 
@@ -25,14 +25,14 @@ pub trait Stencil{
 
 #[derive(Debug)]
 pub struct StencilMap{
-    pub origin: Point,
-    pub addition_map: HashMap<Point, Tile>,
-    pub subtraction_map: HashMap<Point, Tile>,
-    pub current_map: HashMap<Point, Tile>
+    pub origin: Position,
+    pub addition_map: HashMap<Position, Tile>,
+    pub subtraction_map: HashMap<Position, Tile>,
+    pub current_map: HashMap<Position, Tile>
 }
 
 impl StencilMap{
-    pub fn new(origin: Point, map: HashMap<Point, Tile>) -> StencilMap{
+    pub fn new(origin: Position, map: HashMap<Position, Tile>) -> StencilMap{
         let mut sm = StencilMap { 
             origin, 
             addition_map: HashMap::new(), 
@@ -43,10 +43,10 @@ impl StencilMap{
         sm
     }
 
-    pub fn merge(&mut self, mut new_map: HashMap<Point, Tile>){
+    pub fn merge(&mut self, mut new_map: HashMap<Position, Tile>){
         let mut addition_map = HashMap::new();
         let mut subtraction_map = HashMap::new();
-        let current_map: HashMap<Point, Tile> = mem::replace(&mut self.current_map, HashMap::new());
+        let current_map: HashMap<Position, Tile> = mem::replace(&mut self.current_map, HashMap::new());
         //checks what points of the old map are still relevant
         for i in current_map{
             let (point, tile) = i;
@@ -78,13 +78,13 @@ impl StencilMap{
         self.subtraction_map = subtraction_map;
     }
 
-    pub fn translate(&mut self, translation: Point){
+    pub fn translate(&mut self, translation: Position){
         let new_map = self.translate_map(translation);
         self.merge(new_map);
         self.origin += translation;
     }
 
-    fn translate_map(&self, translation: Point) -> HashMap<Point, Tile>{
+    fn translate_map(&self, translation: Position) -> HashMap<Position, Tile>{
         let mut new_map = HashMap::new();
         for i in &self.current_map{
             let (point, tile) = i;
